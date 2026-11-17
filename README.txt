@@ -6,8 +6,8 @@ Cloudflare is down, this still runs and still alerts.
 
 How it flows: every 5 minutes GitHub runs scripts/check.mjs, which looks at
 the home page and at /api/health. If the site is up, any open "Site is DOWN"
-issue is closed. If it is down, one issue is opened (GitHub emails you) and the
-run shows red.
+issue is closed. If it is down 4 or more runs in a row, one issue is opened (GitHub emails you).
+Any down run shows red.
 
 Not covered: a second, independent monitor. If GitHub itself is down, nothing
 here runs.
@@ -34,10 +34,16 @@ reported as up.
 
 ALERTS
 
-A down site opens one GitHub issue labelled site-down. A recovery closes it.
+A site that fails the check more than 3 runs in a row (about 20 minutes at a
+5 minute schedule) opens one GitHub issue labelled site-down, assigned to and
+mentioning mabdullah679, so GitHub emails that account. A recovery closes it.
+Shorter blips make the run red but send no issue.
 For the alert to reach you, GitHub notifications must be on for issues in this
 repo and email or the GitHub mobile app must be enabled. Issues here are
 public, so an outage is visible to anyone. No secrets are used in this repo.
+Unverified: GitHub sends the email to the account's notification address,
+which I cannot read. Confirm in GitHub Settings, Notifications, that it is
+muhammad.abdullah.0913@gmail.com.
 
 
 KNOWN LIMITS

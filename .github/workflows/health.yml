@@ -19,6 +19,7 @@ on:
         required: false
 
 permissions:
+  actions: read
   contents: read
   issues: write
 
@@ -45,15 +46,25 @@ jobs:
           node scripts/check.mjs
           echo "code=$?" >> "$GITHUB_OUTPUT"
 
-      - name: Open an outage issue (once per outage)
-        if: steps.check.outputs.code == '1'
+      - name: Count failed runs in a row
+        id: streak
+        if: steps.check.outputs.code != '0'
+        run: |
+          # The 3 most recent finished runs of this workflow, before this one.
+          prior=$(gh run list --workflow health.yml --status completed --limit 3 --json conclusion \
+            --jq '[.[] | select(.conclusion == "failure")] | length')
+          echo "failures=$((prior + 1))" >> "$GITHUB_OUTPUT"
+          echo "This is failure number $((prior + 1)) in a row (alert after more than 3)."
+
+      - name: Open an outage issue (only after more than 3 failures in a row)
+        if: steps.check.outputs.code == '1' && steps.streak.outputs.failures > 3
         run: |
           gh label create site-down --color B60205 --description "Site health check failing" 2>/dev/null || true
           open=$(gh issue list --label site-down --state open --json number --jq '.[0].number')
           if [ -z "$open" ]; then
-            gh issue create --label site-down \
+            gh issue create --label site-down --assignee mabdullah679 \
               --title "Site is DOWN: $SITE_URL" \
-              --body "The health check failed after retries at $(date -u +'%Y-%m-%d %H:%M UTC'). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+              --body "@mabdullah679 The health check has failed ${{ steps.streak.outputs.failures }} times in a row (latest $(date -u +'%Y-%m-%d %H:%M UTC')). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           else
             echo "Outage issue #$open is already open, not opening another."
           fi
