@@ -1,0 +1,72 @@
+name: health
+
+on:
+  # SCHEDULE IS OFF until the site is live. To turn it on: set the repository
+  # variable SITE_URL (Settings > Secrets and variables > Actions > Variables),
+  # then uncomment the next three lines.
+  # schedule:
+  #   - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Address to check (overrides the SITE_URL variable)"
+        required: false
+      page_marker:
+        description: "Text the home page must contain"
+        required: false
+      health_path:
+        description: "Backend health path, or the word skip"
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      SITE_URL: ${{ inputs.url || vars.SITE_URL }}
+      PAGE_MARKER: ${{ inputs.page_marker || 'Muhammad Abdullah' }}
+      HEALTH_PATH: ${{ inputs.health_path || '/api/health' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check the site
+        id: check
+        run: |
+          set +e
+          node scripts/check.mjs
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Open an outage issue (once per outage)
+        if: steps.check.outputs.code == '1'
+        run: |
+          gh label create site-down --color B60205 --description "Site health check failing" 2>/dev/null || true
+          open=$(gh issue list --label site-down --state open --json number --jq '.[0].number')
+          if [ -z "$open" ]; then
+            gh issue create --label site-down \
+              --title "Site is DOWN: $SITE_URL" \
+              --body "The health check failed after retries at $(date -u +'%Y-%m-%d %H:%M UTC'). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          else
+            echo "Outage issue #$open is already open, not opening another."
+          fi
+
+      - name: Close the outage issue on recovery
+        if: steps.check.outputs.code == '0'
+        run: |
+          for n in $(gh issue list --label site-down --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Recovered. Check passed at $(date -u +'%Y-%m-%d %H:%M UTC')."
+          done
+
+      - name: Fail the run unless the site is up
+        if: steps.check.outputs.code != '0'
+        run: |
+          echo "Check exit code ${{ steps.check.outputs.code }} (1 = site down, 2 = check could not run)"
+          exit 1
