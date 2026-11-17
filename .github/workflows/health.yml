@@ -1,11 +1,9 @@
 name: health
 
 on:
-  # SCHEDULE IS OFF until the site is live. To turn it on: set the repository
-  # variable SITE_URL (Settings > Secrets and variables > Actions > Variables),
-  # then uncomment the next three lines.
-  # schedule:
-  #   - cron: "*/5 * * * *"
+  # Checks the address in the repository variable SITE_URL every 5 minutes.
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       url:

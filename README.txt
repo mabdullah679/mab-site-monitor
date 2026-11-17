@@ -15,11 +15,9 @@ here runs.
 
 STATUS
 
-The schedule is OFF. The site is not deployed yet, so a schedule would report
-"down" every 5 minutes. To turn it on:
-1. In the repo settings, under Secrets and variables, Actions, Variables, add
-   SITE_URL = https://mab.observer
-2. In .github/workflows/health.yml, uncomment the three schedule lines.
+The schedule is ON (every 5 minutes), checking the repository variable SITE_URL,
+which is https://mab.observer. The site went live on 2026-11-17. To pause it,
+comment out the schedule lines in .github/workflows/health.yml.
 
 
 WHAT COUNTS AS DOWN

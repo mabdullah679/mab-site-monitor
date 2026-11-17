@@ -14,10 +14,7 @@ Not covered: a second, independent monitor. If GitHub itself is down, nothing he
 
 ## Status
 
-The schedule is **off**. The site is not deployed yet, so a schedule would report "down" every 5 minutes. Turning it on is two steps:
-
-1. Settings > Secrets and variables > Actions > Variables: add `SITE_URL` = `https://mab.observer`
-2. In [health.yml](.github/workflows/health.yml), uncomment the three `schedule` lines.
+The schedule is **on** (every 5 minutes), checking the repository variable `SITE_URL` = `https://mab.observer`. The site went live on 2026-11-17. To pause it, comment out the `schedule` lines in [health.yml](.github/workflows/health.yml).
 
 ## What counts as down
 
