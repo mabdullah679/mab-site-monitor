@@ -6,7 +6,8 @@ Outside health check for mab.observer. It runs on GitHub Actions in this public 
 GitHub schedule (every 5 min) --> scripts/check.mjs --> https://mab.observer/ and /api/health
                                         |
                        up: close any open "Site is DOWN" issue
-                     down: open one issue (GitHub emails you), run shows red
+            down 4+ times in a row: open one issue (GitHub emails you)
+            any down run: that run shows red
 ```
 
 Not covered: a second, independent monitor. If GitHub itself is down, nothing here runs.
@@ -31,7 +32,7 @@ If the check cannot run at all (no `SITE_URL`), it exits 2 and the run goes red.
 
 ## Alerts
 
-A down site opens one GitHub issue labelled `site-down`. A recovery closes it. For the alert to reach you, GitHub notifications must be on for issues in this repo (Watch > Participating and mentions, or All activity) and email or the GitHub mobile app enabled. Failed scheduled runs also email the person who last edited the schedule.
+A site that fails the check **more than 3 runs in a row** (about 20 minutes at a 5 minute schedule) opens one GitHub issue labelled `site-down`, assigned to and mentioning `mabdullah679`, so GitHub emails that account. A recovery closes it. Shorter blips make the run red but send no issue. For the alert to reach you, GitHub notifications must be on for issues in this repo (Watch > Participating and mentions, or All activity) and email or the GitHub mobile app enabled. Failed scheduled runs also email the person who last edited the schedule. **Unverified:** GitHub sends these to the account's notification address, which I cannot read. Confirm in GitHub Settings > Notifications that it is muhammad.abdullah.0913@gmail.com.
 
 Issues here are public, so an outage is visible to anyone. No secrets are used in this repo.
 
