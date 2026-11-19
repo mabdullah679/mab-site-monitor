@@ -35,6 +35,7 @@ test.describe('multi-tier-app (React + API)', () => {
   });
 
   test('bad input is rejected with a visible message, not a crash', async ({ page, guard }) => {
+    guard.allowConsole(/status of 400/); // the browser logs the deliberate 400 as a console error
     await page.goto(URLS.multiTier);
     await page.getByLabel('Your name').fill('<script>');
     await page.getByRole('button', { name: 'Greet' }).click();

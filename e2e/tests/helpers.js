@@ -15,8 +15,11 @@ const URLS = {
 const test = base.extend({
   guard: async ({ page }, use, testInfo) => {
     const errors = [];
+    const allowed = [];
     page.on('console', (m) => {
-      if (m.type() === 'error') errors.push(`console: ${m.text()}`);
+      if (m.type() !== 'error') return;
+      if (allowed.some((re) => re.test(m.text()))) return;
+      errors.push(`console: ${m.text()}`);
     });
     page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
     const dir = path.join(SHOTS, testInfo.project.name);
@@ -25,6 +28,10 @@ const test = base.extend({
     const slug = testInfo.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 40);
     const api = {
       errors,
+      // Only for a step that deliberately provokes an HTTP error (the browser logs it as a console error).
+      allowConsole(re) {
+        allowed.push(re);
+      },
       async shot(step) {
         n += 1;
         const file = path.join(dir, `${slug}-${String(n).padStart(2, '0')}-${step}.png`);

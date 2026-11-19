@@ -68,9 +68,10 @@ test.describe('skill-tree-explorer', () => {
     await expect(page.getByText('Complete prerequisites to unlock this skill')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Start Learning' })).toHaveCount(0);
     await guard.shot('locked');
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Close' }).click();
     await node(page, 3).click();
     await page.getByRole('button', { name: 'Complete Stage 1' }).click();
+    await expect(header(page)).toContainText('500');
     await node(page, 4).click();
     await page.getByRole('button', { name: 'Start Learning' }).click();
     await expect(page).toHaveURL(/\/learn\/.+/);
