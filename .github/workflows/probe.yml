@@ -1,0 +1,45 @@
+name: probe
+
+# Probes every project in projects.json and pushes the result to mab.observer/admin (Logistics tab).
+# No secret lives in this repository. The ingest token is read from AWS Parameter Store at run time through
+# a short lived OIDC login that only the main branch of this repo can use, then masked.
+# Triggers: schedule, manual. Never pull_request, so a fork cannot reach the token.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Sign in to AWS (short lived, one parameter)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.PROBE_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Fetch the ingest token (masked, never printed)
+        run: |
+          set +x
+          T="$(aws ssm get-parameter --name /mab-site/prod/admin-ingest-token --with-decryption --query Parameter.Value --output text)"
+          echo "::add-mask::$T"
+          echo "INGEST_TOKEN=$T" >> "$GITHUB_ENV"
+
+      - name: Probe and push
+        env:
+          INGEST_URL: https://mab.observer/api/admin/ingest
+        run: node scripts/probe.mjs

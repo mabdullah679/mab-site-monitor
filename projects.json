@@ -1,0 +1,5 @@
+[
+  { "project": "mab-observer", "url": "https://mab.observer", "marker": "Muhammad Abdullah", "health": "/api/health" },
+  { "project": "digital-art-store", "url": "https://digital-art-store-6fn.pages.dev", "marker": "Muhammad Abdullah", "health": null },
+  { "project": "digital-art-store-dev", "url": "https://dev.digital-art-store-6fn.pages.dev", "marker": null, "health": null }
+]
