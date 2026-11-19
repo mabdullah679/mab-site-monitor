@@ -1,0 +1,47 @@
+name: showcase-e2e
+
+# Real click-through of the live showcase products (public URLs only, no secrets, no cloud access).
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "e2e/**"
+      - ".github/workflows/showcase-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright (desktop 1280 + phone 400)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - run: npm ci
+      - run: npm audit --audit-level=low
+      - run: npx playwright install --with-deps chromium
+      - name: Run the suite against the live URLs
+        run: npm run e2e
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: showcase-e2e-report
+          path: |
+            e2e/shots/
+            e2e/playwright-report/
+            e2e/test-results/
+          if-no-files-found: ignore

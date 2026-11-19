@@ -1,0 +1,14 @@
+{
+  "name": "showcase-e2e",
+  "private": true,
+  "description": "Real click-through Playwright suite for the live showcase products (public URLs only, no secrets)",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:desktop": "playwright test --project=desktop-1280",
+    "e2e:phone": "playwright test --project=phone-400"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  },
+  "engines": { "node": ">=22" }
+}
